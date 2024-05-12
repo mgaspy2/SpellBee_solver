@@ -2,9 +2,8 @@
 
 import csv
 from tqdm import tqdm
-import time
 
-def binary_search(word, file_path='AllWords.txt'):
+def binary_search(word, file_path='Answers.txt'):
     with open(file_path, 'r') as file:
         lines = file.readlines()
         low = 0
@@ -70,12 +69,12 @@ class Words:
                     self.display_tree(child, level + 1)
                     
     def dfs(self):
-        start_time = time.time()
         total_nodes = self.count_nodes(self.root)
+        
         with tqdm(total=total_nodes, desc="DFS Progress") as pbar:
             self._dfs_recursive(self.root, '', 0, pbar)
-        end_time = time.time()
-        self.dfs_duration = int((end_time - start_time) / 60)
+            
+        self.dfs_duration = int(pbar.format_dict['elapsed'] / 60)
 
         print("\nFound Words:\n")
         for word, level, index in self.found_words:
@@ -133,7 +132,7 @@ if __name__ == "__main__":
     input_letters = ['d', 'o', 'r', 's', 'e', 't', 'y']  # 7 letters is recommended
     required_letter = 'y'  # Letter that must be included in the word
     min_word_length = 4  # Minimum word length, default is 4
-    max_word_length = 7  # Maximum word length, 5 takes about 1 minute (19608 nodes), 6 takes about 7 minutes (137257 nodes), 7 takes about 50 minutes (960800 nodes) (tested on AMD Ryzen 7 5800H, before optimization on line 91)
+    max_word_length = 7  # Maximum word length, 5 takes about 1 minute (19608 nodes), 6 takes about 7 minutes (137257 nodes), 7 takes about 50 minutes (960800 nodes) (tested on AMD Ryzen 7 5800H, before optimization on line 91 and dictionary change to Answers.txt)
 
     word_tree = Words(input_letters, required_letter, min_word_length, max_word_length)
     word_tree.build_tree()
