@@ -2,6 +2,8 @@
 
 import csv
 from tqdm import tqdm
+import multiprocessing
+from functools import partial
 
 def binary_search(word, file_path='Answers.txt'):
     with open(file_path, 'r') as file:
@@ -22,6 +24,13 @@ def binary_search(word, file_path='Answers.txt'):
 
         return -1
 
+def _dfs_recursive_parallel(node, word_memory, level, required_letter, min_length, max_length):
+    word_tree = Words([], required_letter, min_length, max_length)
+    word_tree.found_words = []
+    word_tree._dfs_recursive(node, word_memory, level)
+
+    return word_tree.found_words
+
 class TreeNode:
     def __init__(self, data):
         self.data = data
@@ -39,6 +48,15 @@ class Words:
 
         if self.min_length > self.max_length:
             raise ValueError("Minimum word length cannot be greater than maximum word length.")
+
+    @staticmethod
+    def count_nodes(node):
+        if node is None:
+            return 0
+        count = 1
+        for child in node.children:
+            count += Words.count_nodes(child)
+        return count
 
     def build_tree(self):
         self.root = TreeNode("root")
@@ -68,46 +86,6 @@ class Words:
                 for child in node.children:
                     self.display_tree(child, level + 1)
                     
-    def dfs(self):
-        total_nodes = self.count_nodes(self.root)
-        
-        with tqdm(total=total_nodes, desc="DFS Progress") as pbar:
-            self._dfs_recursive(self.root, '', 0, pbar)
-            
-        self.dfs_duration = int(pbar.format_dict['elapsed'] / 60)
-
-        print("\nFound Words:\n")
-        for word, level, index in self.found_words:
-            print(f"Word: {word}, Level: {level}, Index: {index+1}")
-
-    def _dfs_recursive(self, node, word_memory, level, pbar):
-        if node is None:
-            return
-
-        if level > 0:
-            word_memory += node.data
-
-        if len(word_memory) >= 3 and word_memory[-1] == word_memory[-2] == word_memory[-3]:
-            return
-        elif self.required_letter in word_memory and self.min_length <= level <= self.max_length:
-            index = binary_search(word_memory)
-            if index != -1:
-                self.found_words.append((word_memory, level, index))
-
-        pbar.update(1)
-        
-        for child in node.children:
-            self._dfs_recursive(child, word_memory, level + 1, pbar)
-
-    @staticmethod
-    def count_nodes(node):
-        if node is None:
-            return 0
-        count = 1
-        for child in node.children:
-            count += Words.count_nodes(child)
-        return count
- 
     def save_to_csv(self, file_path=None):
         if file_path is None:
             file_name = f"{''.join(self.letters)}-{self.required_letter}-{self.min_length}-{self.max_length}-{self.dfs_duration}min.csv"
@@ -121,21 +99,90 @@ class Words:
                 writer.writerow({'Word': word, 'Level': level, 'Index': index})
 
         print(f"\nCSV file saved as: {file_path}\n")
+        
+    def dfs(self):
+        nodes_count = self.count_nodes(self.root)
+        
+        with tqdm(total=nodes_count, desc="DFS Progress") as pbar:
+            self._dfs_recursive(self.root, '', 0, pbar)
+            
+        self.dfs_duration = int(pbar.format_dict['elapsed'] / 60)
 
+        print("\nFound Words:\n")
+        for word, level, index in self.found_words:
+            print(f"Word: {word}, Level: {level}, Index: {index+1}")
+
+    def _dfs_recursive(self, node, word_memory, level, pbar=None):
+        if node is None:
+            return
+
+        if level > 0:
+            word_memory += node.data
+
+        if level >= 3 and word_memory[-1] == word_memory[-2] == word_memory[-3]:
+            return
+        elif self.required_letter in word_memory and self.min_length <= level <= self.max_length:
+            index = binary_search(word_memory)
+            if index != -1:
+                self.found_words.append((word_memory, level, index))
+
+        if pbar is not None:
+            pbar.update(1)
+        
+        for child in node.children:
+            self._dfs_recursive(child, word_memory, level + 1, pbar)
+    
+    def dfs_parallel(self):
+        processes_num = len(self.root.children)
+        cores_num = multiprocessing.cpu_count()
+        if processes_num > cores_num:
+            processes_num = cores_num
+
+        pool = multiprocessing.Pool(processes_num)
+
+        partial_dfs_recursive = partial(
+            _dfs_recursive_parallel, 
+            word_memory='', 
+            level=1, 
+            required_letter=self.required_letter, 
+            min_length=self.min_length, 
+            max_length=self.max_length
+        )
+
+        with tqdm(total=processes_num, desc="Parallel DFS Progress") as pbar:
+            results = []
+            for result in pool.imap(partial_dfs_recursive, self.root.children):
+                results.append(result)
+                pbar.update(1)
+
+        self.dfs_duration = int(pbar.format_dict['elapsed'] / 60)
+        
+        for found_words in results:
+            self.found_words.extend(found_words)
+
+        pool.close()
+        pool.join()
+        
+        print("\nFound {} words:\n".format(len(self.found_words)))
+        for word, level, index in self.found_words:
+            print(f"Word: {word}, Level: {level}, Index: {index+1}")
+            
+        print(f"\nDFS Duration: {int(pbar.format_dict['elapsed'])} seconds")
+            
 if __name__ == "__main__":
-    from letters import letters, letter
-    
-    # Input letters, required letter, minimum word length, and maximum word length
-    
+    # from letters import letters, letter
     # input_letters = letters[0]
     # required_letter = letter[0]
+    
+    # Input letters, required letter, minimum word length, and maximum word length
     input_letters = ['d', 'o', 'r', 's', 'e', 't', 'y']  # 7 letters is recommended
     required_letter = 'y'  # Letter that must be included in the word
     min_word_length = 4  # Minimum word length, default is 4
-    max_word_length = 7  # Maximum word length, 5 takes about 1 minute (19608 nodes), 6 takes about 7 minutes (137257 nodes), 7 takes about 50 minutes (960800 nodes) (tested on AMD Ryzen 7 5800H, before optimization on line 91 and dictionary change to Answers.txt)
+    max_word_length = 5  # Maximum word length, 5 takes about 1 minute (19608 nodes), 6 takes about 7 minutes (137257 nodes), 7 takes about 50 minutes (960800 nodes) (tested on AMD Ryzen 7 5800H, before optimization on line 91 and dictionary change to Answers.txt)
 
     word_tree = Words(input_letters, required_letter, min_word_length, max_word_length)
     word_tree.build_tree()
     # word_tree.display_tree(word_tree.root)
-    word_tree.dfs()
+    # word_tree.dfs()
+    word_tree.dfs_parallel()
     word_tree.save_to_csv()
