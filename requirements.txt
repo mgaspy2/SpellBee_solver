@@ -3,4 +3,6 @@ python==3.11.9
 
 # Project dependencies
 csv
+multiprocessing
+functools
 tqdm==4.62.3
