@@ -91,10 +91,6 @@ class WordsDictionary:
 
     def display_dictionary(self, decimals=2, words=False):
         print("\nDictionary solver results:")
-        print("\nLetters:", self.letters)
-        print("Required letter:", self.required_letter)
-        print("Minimum word length:", self.min_length)
-        print("Maximum word length:", self.max_length)
 
         if words:
             print(f"\nFound {len(self.found_words)} words:\n")
