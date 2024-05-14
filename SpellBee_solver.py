@@ -45,8 +45,8 @@ class SpellBeeSolver:
 
 if __name__ == "__main__":
     # Input letters, required letter, minimum word length, and maximum word length
-    input_letters = ["d", "o", "r", "s", "e", "t", "y"]  # 7 letters is default
-    required_letter = "y"  # Letter that must be included in the word
+    input_letters = ["a", "p", "t", "i", "y", "l", "c"]  # 7 letters is default
+    required_letter = "c"  # Letter that must be included in the word
     min_word_length = 4  # Minimum word length, default is 4
     max_word_length = 5  # Maximum word length
 

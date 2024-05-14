@@ -75,8 +75,6 @@ class WordsDictionary:
                 ):
                     self.found_words.append((word, index))
 
-        end_time = time.time()
-
     def format_time(self, duration, decimals=2):
         formatted_time = duration
 
@@ -92,16 +90,18 @@ class WordsDictionary:
         return formatted_time
 
     def display_dictionary(self, decimals=2, words=False):
-        print("\n\Dictionary solver results:")
+        print("\nDictionary solver results:")
         print("\nLetters:", self.letters)
         print("Required letter:", self.required_letter)
+        print("Minimum word length:", self.min_length)
+        print("Maximum word length:", self.max_length)
 
         if words:
             print(f"\nFound {len(self.found_words)} words:\n")
             for word, index in self.found_words:
                 print(f"Word: {word}, Index: {index+1}")
         else:
-            print(f"\nFound {len(self.found_words)} words\n")
+            print(f"\nFound {len(self.found_words)} words")
 
         print(
             f"\nSearch completed in: {self.format_time(self.search_duration, decimals)}"
@@ -126,14 +126,13 @@ class WordsDictionary:
 
 
 if __name__ == "__main__":
-    # Input letters, required letter, minimum word length, and maximum word length
-    input_letters = ["d", "o", "r", "s", "e", "t", "y"]  # 7 letters is default
-    required_letter = "y"  # Letter that must be included in the word
-    min_word_length = 4  # Minimum word length, default is 4
-    max_word_length = 5  # Maximum word length
+    input_letters = ["a", "p", "t", "i", "y", "l", "c"]
+    required_letter = "c"
+    min_word_length = 4
+    max_word_length = 5
 
     words = WordsDictionary(
         input_letters, required_letter, min_word_length, max_word_length, "Answers.txt"
     )
-    words.display_dictionary(2, words=True)
+    words.display_dictionary(2, words=False)
     # words.save_to_csv()
