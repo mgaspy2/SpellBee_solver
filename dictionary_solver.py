@@ -129,7 +129,7 @@ if __name__ == "__main__":
     input_letters = ["a", "p", "t", "i", "y", "l", "c"]
     required_letter = "c"
     min_word_length = 4
-    max_word_length = 5
+    max_word_length = 6
 
     words = WordsDictionary(
         input_letters, required_letter, min_word_length, max_word_length, "Answers.txt"

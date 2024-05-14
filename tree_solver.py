@@ -10,30 +10,32 @@ def binary_search(word, dictionary, word_base=False):
     while low <= high:
         mid = (low + high) // 2
         current_word = dictionary[mid].strip()
-        
+
         if word_base and current_word.startswith(word):
             if word == current_word:
                 return mid, True
             else:
-                index = mid   
+                index = mid
         elif word == current_word:
             return mid, True
-        
+
         if current_word < word:
             low = mid + 1
         else:
             high = mid - 1
-            
+
     return index, False
 
 
 class TreeNode:
-    def __init__(self, letter):
+    def __init__(self, letter, word=""):
         self.letter = letter
+        self.word = word
+        self.word += self.letter
         self.children = []
 
-    def __repr__(self):
-        return self.data
+    def __str__(self):
+        return self.word
 
     def add_child(self, node):
         self.children.append(node)
@@ -44,15 +46,22 @@ class TreeNode:
     def delete_children(self):
         self.children = []
 
-    def build_tree(self, letters, length, depth=0):
+    def build_tree(self, letters, length, word="", depth=0):
         if depth >= length:
             return 0
+
+        if depth > 0:
+            word = self.word
+            # print(depth, word)
+
         count = 0
         for letter in letters:
-            self.children.append(TreeNode(letter))
+            self.children.append(TreeNode(letter, word))
             count += 1
+
         for child in self.children:
-            count += child.build_tree(letters, length, depth + 1)
+            count += child.build_tree(letters, length, word, depth + 1)
+
         return count
 
     # def dfs(self, node):
@@ -97,7 +106,7 @@ class WordsTree:
             dictionary = file.readlines()
 
         return dictionary
-    
+
     def get_prefixes(self, prefix_length=2):
         prefixes = set()
 
@@ -108,37 +117,38 @@ class WordsTree:
 
         return prefixes
 
-    def dfs(self, node, word="", prev_found=False, depth=0):
+    def dfs(self, node, prev_found=False, depth=0):
         if node is None:
             return
 
         if depth > 0:
-            word += node.letter
-       
+            pass
+
         if depth == 2:
-            if not any(word.startswith(prefix) for prefix in self.prefixes):
-                return
-        
-        if depth >= 3 and word[-1] == word[-2] == word[-3]:
+            if not any(node.word.startswith(prefix) for prefix in self.prefixes):
                 return
 
+        if depth >= 3 and node.word[-1] == node.word[-2] == node.word[-3]:
+            return
+
         if (
-            self.required_letter in word and self.min_length <= len(word) <= self.max_length
+            self.required_letter in node.word
+            and self.min_length <= len(node.word) <= self.max_length
         ):
-            index, match = binary_search(word, self.dictionary, prev_found)
+            index, match = binary_search(node.word, self.dictionary, prev_found)
             if prev_found:
                 prev_found = False
                 if index == -1:
                     return
                 elif match:
-                    self.found_words.append((word, depth, index))
+                    self.found_words.append((node.word, depth, index))
                     prev_found = True
             elif match and index != -1:
-                self.found_words.append((word, depth, index))
+                self.found_words.append((node.word, depth, index))
                 prev_found = True
 
         for child in node.children:
-            self.dfs(child, word, prev_found, depth + 1)
+            self.dfs(child, prev_found, depth + 1)
 
     def format_time(self, duration, decimals=2):
         formatted_time = duration
@@ -157,14 +167,15 @@ class WordsTree:
     def display_branch(self, node, level=0):
         if node is not None:
             if level == 0:
+                print(node.letter)
                 for child in node.children:
                     self.display_branch(child, level + 1)
-            elif node.data == self.letters[-1]:
-                print("  " * level + "└─" + node.data)
+            elif node.letter == self.letters[-1]:
+                print("  " * level + "└─" + node.letter + "  " + node.word)
                 for child in node.children:
                     self.display_branch(child, level + 1)
             else:
-                print("  " * level + "├─" + node.data)
+                print("  " * level + "├─" + node.letter + "  " + node.word)
                 for child in node.children:
                     self.display_branch(child, level + 1)
 
@@ -175,7 +186,7 @@ class WordsTree:
         print("Minimum word length:", self.min_length)
         print("Maximum word length:", self.max_length)
         print("\nFound", len(self.prefixes), "prefixes")
-        print("\nCreated tree with", self.node_count-1, "nodes")
+        print("\nCreated tree with", self.node_count - 1, "nodes")
 
         if words:
             print(f"\nFound {len(self.found_words)} words:\n")
@@ -215,12 +226,12 @@ if __name__ == "__main__":
     input_letters = ["a", "p", "t", "i", "y", "l", "c"]
     required_letter = "c"
     min_word_length = 4
-    max_word_length = 5
+    max_word_length = 6
 
     wordsTree = WordsTree(input_letters, required_letter, min_word_length, max_word_length, "Answers.txt")
-    wordsTree.display_tree(2, words=False)
+    wordsTree.display_tree(2, tree=False)
     # wordsTree.save_to_csv()
-    
+
     # Binary search test
     # with open("Answers.txt", "r") as file:
     #         dictionary = file.readlines()
