@@ -20,10 +20,10 @@ class SpellBeeSolver:
         self.dictionary_path = dictionary_path
 
     def solve(self, method="vs", save=False):
-        print("\nLetters:", self.letters)
-        print("Required letter:", self.required_letter)
-        print("Minimum word length:", self.min_length)
-        print("Maximum word length:", self.max_length)
+        print("\n         Letters:", self.letters)
+        print(" Required letter:", self.required_letter)
+        print("Min. word length:", self.min_length)
+        print("Max. word length:", self.max_length)
 
         if method == "tree":
             solver = WordsTree(
@@ -67,13 +67,11 @@ class SpellBeeSolver:
                 "Tree       | Found words: "
                 + str(len(tree.found_words))
                 + " | Search: "
-                + tree.format_time(tree.dfs_duration)
+                + tree.format_time(tree.search_duration)
                 + " | Tree build: "
-                + tree.format_time(tree.tree_build_duration)
+                + tree.format_time(tree.dfs_duration)
                 + " | Nodes: "
-                + str(tree.node_count)
-                + " | Prefixes: "
-                + str(len(tree.prefixes))
+                + str(tree.nodes_count)
             )
             print(
                 "Dictionary | Found words: "

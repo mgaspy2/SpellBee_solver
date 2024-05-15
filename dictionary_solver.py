@@ -100,10 +100,10 @@ class WordsDictionary:
             print(f"\nFound {len(self.found_words)} words")
 
         print(
-            f"\nSearch completed in: {self.format_time(self.search_duration, decimals)}"
+            f"\n|  Search: {self.format_time(self.search_duration, decimals)}"
         )
         print(
-            f"Class initialization completed in: {self.format_time(self.duration, decimals)}\n"
+            f"|  Solver: {self.format_time(self.duration, decimals)}\n"
         )
 
     def save_to_csv(self, file_path=None):
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     input_letters = ["a", "p", "t", "i", "y", "l", "c"]
     required_letter = "c"
     min_word_length = 4
-    max_word_length = 6
+    max_word_length = 7
 
     words = WordsDictionary(
         input_letters, required_letter, min_word_length, max_word_length, "Answers.txt"
